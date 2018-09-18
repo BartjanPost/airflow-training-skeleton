@@ -38,5 +38,5 @@ pgsl_to_gcs = PostgresToGoogleCloudStorageOperator(
     sql="select * from land_registry_price_paid_uk where trnasfer_date='{{ds}}'",
     bucket="airflow_training_bp",
     filename="land_registry_price_paid_uk/{{ds}}/properties_{}.json",
-    postgre_conn_id="airflow_training_postgres"
+    postgres_conn_id="airflow_training_postgres"
 )
