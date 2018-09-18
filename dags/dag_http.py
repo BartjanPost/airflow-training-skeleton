@@ -7,7 +7,7 @@ from HTTP_Operator import HttpToGcsOperator
 
 
 dag = DAG(
-    dag_id="my_first_postgres_dag",
+    dag_id="my_first_http_dag",
     schedule_interval="30 7 * * *",
     default_args={
         "owner": "airflow",
