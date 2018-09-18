@@ -17,6 +17,7 @@ dag = DAG(
     },
 )
 
+
 """
 def print_exec_date(**context):
     print(context["execution_date"])
@@ -29,6 +30,7 @@ def print_exec_date(**context):
 #    dag=dag
 #)
 #
+
 
 pgsl_to_gcs= PostgresToGoogleCloudStorageOperator
 (
