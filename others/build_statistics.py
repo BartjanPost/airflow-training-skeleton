@@ -81,7 +81,9 @@ aggregation = spark.sql(
 )
 
 (
-    aggregation.write.mode("overwrite")
-    .partitionBy("transfer_date")
-    .parquet("gs://airflow_training_bp/average_prices/")
+    aggregation.write
+    .coalesce(1)
+    .write
+    .mode("overwrite")
+    .parquet("gs://airflow_training_bp/average_prices/transfer_date={}/".format(dt))
 )
