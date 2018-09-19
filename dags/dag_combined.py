@@ -8,6 +8,7 @@ from airflow.contrib.operators.dataproc_operator import (
     DataprocClusterCreateOperator,
     DataProcPySparkOperator,
     DataprocClusterDeleteOperator)
+from godatadriven.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
 
 
 dag = DAG(
@@ -75,6 +76,18 @@ dataproc_delete_cluster = DataprocClusterDeleteOperator(
 )
 
 
+gcs_to_bq = GoogleCloudStorageToBigQueryOperator(
+    task_id="gcs_to_BigQuery",
+    bucket="airflow_training_bp",
+    source_objects=["average_prices/transfer_date={{ ds }}/*"],
+    destination_project_dataset_table="gdd-32ba4f8b4a2ca57e5b201b0062:prices.land_registry_price${{ ds_nodash }}",
+    source_format="PARQUET",
+    write_disposition="WRITE_TRUNCATE",
+    dag=dag,
+)
+
+
 pgsl_to_gcs >> dataproc_create_cluster
 dataproc_create_cluster >> compute_aggregates
 compute_aggregates >> dataproc_delete_cluster
+dataproc_delete_cluster >> gcs_to_bq
