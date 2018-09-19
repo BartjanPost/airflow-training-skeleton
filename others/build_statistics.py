@@ -35,7 +35,7 @@ spark.read.json(
 #  |-- transaction: string (nullable = true)
 #  |-- transfer_date: double (nullable = true)
 
-spark.read.json("gs://airflow-training-data/currency/*.json").withColumn(
+spark.read.json("gs://airflow_training_bp/currency/*.json").withColumn(
     "date", col("date").cast("date")
 ).createOrReplaceTempView("currencies")
 
@@ -83,5 +83,5 @@ aggregation = spark.sql(
 (
     aggregation.write.mode("overwrite")
     .partitionBy("transfer_date")
-    .parquet("gs://airflow-training-data/average_prices/")
+    .parquet("gs://airflow_training_bp/average_prices/")
 )
