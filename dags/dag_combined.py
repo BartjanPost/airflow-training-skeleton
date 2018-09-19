@@ -9,6 +9,7 @@ from airflow.contrib.operators.dataproc_operator import (
     DataProcPySparkOperator,
     DataprocClusterDeleteOperator)
 from godatadriven.operators.gcs_to_bq import GoogleCloudStorageToBigQueryOperator
+from airflow.contrib.operators.dataflow_operator import DataFlowPythonOperator
 
 
 dag = DAG(
@@ -45,6 +46,17 @@ dataproc_create_cluster = DataprocClusterCreateOperator(
 )
 
 
+df_to_bg = DataFlowPythonOperator(
+    task_id="Dataflow_to_BigQuery",
+    dataflow_default_options={
+        "project": "gdd-32ba4f8b4a2ca57e5b201b0062",
+        "region": "europe-west1",
+    },
+    py_file="gs://airflow_training_bp/dataflow_job.py",
+    dag=dag,
+)
+
+
 for currency in {'EUR', 'USD'}:
     currency_task = HttpToGcsOperator(
         task_id="get_currency_" + currency,
@@ -57,6 +69,7 @@ for currency in {'EUR', 'USD'}:
         dag=dag,
     )
     currency_task >> dataproc_create_cluster
+    currency_task >> df_to_bg
 
 
 compute_aggregates = DataProcPySparkOperator(
@@ -91,3 +104,4 @@ pgsl_to_gcs >> dataproc_create_cluster
 dataproc_create_cluster >> compute_aggregates
 compute_aggregates >> dataproc_delete_cluster
 compute_aggregates >> gcs_to_bq
+pgsl_to_gcs >> df_to_bg
