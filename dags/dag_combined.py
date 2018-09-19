@@ -33,19 +33,6 @@ pgsl_to_gcs = PostgresToGoogleCloudStorageOperator(
 )
 
 
-for currency in {'EUR', 'USD'}:
-    HttpToGcsOperator(
-        task_id="get_currency_" + currency,
-        method="GET",
-        endpoint="airflow-training-transform-valutas?date={{ ds }}&from=GBP&to=" + currency,
-        http_conn_id="airflow_training_http",
-        gcs_conn_id="airflow_training_gcs_bucket",
-        gcs_bucket="airflow_training_bp",
-        gcs_path="currency/{{ ds }}-" + currency + ".json",
-        dag=dag,
-    )
-
-
 dataproc_create_cluster = DataprocClusterCreateOperator(
     task_id="create_dataproc",
     cluster_name="analyse-pricing-{{ ds }}",
@@ -55,6 +42,20 @@ dataproc_create_cluster = DataprocClusterCreateOperator(
     dag=dag,
     auto_delete_ttl=5 * 60,  # Autodelete after 5 minutes
 )
+
+
+for currency in {'EUR', 'USD'}:
+    currency_task = HttpToGcsOperator(
+        task_id="get_currency_" + currency,
+        method="GET",
+        endpoint="airflow-training-transform-valutas?date={{ ds }}&from=GBP&to=" + currency,
+        http_conn_id="airflow_training_http",
+        gcs_conn_id="airflow_training_gcs_bucket",
+        gcs_bucket="airflow_training_bp",
+        gcs_path="currency/{{ ds }}-" + currency + ".json",
+        dag=dag,
+    )
+    currency_task >> dataproc_create_cluster
 
 
 compute_aggregates = DataProcPySparkOperator(
@@ -72,3 +73,8 @@ dataproc_delete_cluster = DataprocClusterDeleteOperator(
     dag=dag,
     project_id="gdd-32ba4f8b4a2ca57e5b201b0062",
 )
+
+
+pgsl_to_gcs >> dataproc_create_cluster
+dataproc_create_cluster >> compute_aggregates
+compute_aggregates >> dataproc_delete_cluster
